@@ -1,4 +1,4 @@
-# Load trained model and encoders
+# Importing necessary libraries
 import streamlit as st
 import pandas as pd
 from rapidfuzz import process
@@ -36,21 +36,30 @@ base_ingredients = {
     "Samosa": {"Potato": 0.1, "Wheat Flour": 0.1, "Oil": 0.02, "Spices": 0.005},
     "Pakora": {"Besan (Gram Flour)": 0.08, "Onion": 0.05, "Spices": 0.005, "Oil": 0.02},
     "Bonda": {"Potato": 0.08, "Besan (Gram Flour)": 0.06, "Spices": 0.005, "Oil": 0.02}
-    }
+}
+
+# Additional cleaning agent and water consumption calculations
+cleaning_agents = {
+    "Vim Liquid": 0.001,  # Vim liquid required per person (in ml)
+    "Harpic for Floor": 0.002,  # Harpic required for floor (in liters)
+    "Water for Cleaning Plates": 0.5,  # Water required for cleaning plates (in liters per person)
+    "Water for Mess": 2  # Water required for each student (in liters for overall consumption)
+}
 
 # Function to find the closest match
 def get_closest_match(dish_name, dishes):
     match, score, _ = process.extractOne(dish_name, dishes)
     return match if score > 60 else None
 
-# Streamlit UI
-st.title("Ingredient Calculator for Dishes")
+# Streamlit UI for ingredient calculation
+st.title("Ingredient and Cleaning Agent Calculator")
 
-# User input
+# User input for dish and number of people (students)
+num_students = st.number_input("Enter number of students:", min_value=1, step=1)
 user_dish = st.text_input("Enter dish name:")
-num_people = st.number_input("Enter number of people:", min_value=1, step=1)
 
-if st.button("Calculate Ingredients"):
+# Calculate ingredients for selected dish
+if st.button("Calculate Ingredients and Cleaning Agents"):
     if not user_dish:
         st.error("Please enter a dish name.")
     else:
@@ -59,18 +68,21 @@ if st.button("Calculate Ingredients"):
         if not corrected_dish:
             st.error(f"'{user_dish}' not found. Please check the spelling!")
         else:
-            st.success(f"Ingredients for {num_people} people ({corrected_dish}):")
-            data = {ingredient: qty * num_people for ingredient, qty in base_ingredients[corrected_dish].items()}
-            
-            # Create the DataFrame with numbering starting from 1
+            st.success(f"Ingredients for {num_students} students ({corrected_dish}):")
+            # Ingredient calculation
+            data = {ingredient: qty * num_students for ingredient, qty in base_ingredients[corrected_dish].items()}
             df = pd.DataFrame(list(data.items()), columns=["Ingredient", "Quantity (Kg)"])
-            df.index = df.index + 1  # Adjust the index to start from 1
-            
             st.table(df)
 
+            # Cleaning agent calculation
+            vim_liquid = cleaning_agents["Vim Liquid"] * num_students
+            harpic = cleaning_agents["Harpic for Floor"] * num_students
+            water_plates = cleaning_agents["Water for Cleaning Plates"] * num_students
+            water_mess = cleaning_agents["Water for Mess"] * num_students
 
-
-
-
-
-
+            # Display cleaning agents and water consumption results
+            st.success(f"Cleaning and Water Consumption for {num_students} students:")
+            st.write(f"Vim Liquid required (for cleaning plates): {vim_liquid:.3f} ml")
+            st.write(f"Harpic required (for cleaning floor): {harpic:.3f} liters")
+            st.write(f"Water required for cleaning plates: {water_plates:.3f} liters")
+            st.write(f"Total water consumption (for the mess): {water_mess:.3f} liters")
