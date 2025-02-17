@@ -61,7 +61,11 @@ if st.button("Calculate Ingredients"):
         else:
             st.success(f"Ingredients for {num_people} people ({corrected_dish}):")
             data = {ingredient: qty * num_people for ingredient, qty in base_ingredients[corrected_dish].items()}
+            
+            # Create the DataFrame with numbering starting from 1
             df = pd.DataFrame(list(data.items()), columns=["Ingredient", "Quantity (Kg)"])
+            df.index = df.index + 1  # Adjust the index to start from 1
+            
             st.table(df)
 
 
